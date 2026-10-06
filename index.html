@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PCT shift sheets</title>
+  <meta name="description" content="Printable one-page shift sheets for Patient Care Technicians.">
+
+  <!--
+    ==========================================================================
+    PCT SHIFT SHEETS - LANDING PAGE
+    ==========================================================================
+    One self-contained file. Nothing is loaded from other websites:
+    no fonts, no libraries, no analytics, no cookies.
+
+    Files this page expects to sit next to it in the repo:
+      day.pdf     Day shift sheet   (0700 / 1100 / 1500)
+      night.pdf   Night shift sheet (1900 / 2300 / 0300)
+
+    How the file is organized:
+      1. CSS   - design tokens, then layout, then the two sheet tiles
+      2. HTML  - header, two tiles, print tip, footer
+      3. JS    - one small script that tags the current shift
+    ==========================================================================
+  -->
+
+  <style>
+    /* ----------------------------------------------------------------------
+       1. DESIGN TOKENS
+       Every color and size used on the page is named here once.
+       To restyle the page, change these values and nothing else.
+       ---------------------------------------------------------------------- */
+    :root {
+      --ink:        #14213d;  /* Navy. Main text and the night tile.      */
+      --ink-soft:   #4a5873;  /* Secondary text.                          */
+      --paper:      #ffffff;  /* Page background.                         */
+      --day:        #e8f1f8;  /* Pale sky. Background of the day tile.    */
+      --rule:       #d5dde8;  /* Thin divider lines.                      */
+      --focus:      #f2a900;  /* Amber. Keyboard focus ring and the tag.  */
+
+      --radius:     10px;
+      --page-width: 760px;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* ----------------------------------------------------------------------
+       2. BASE
+       ---------------------------------------------------------------------- */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 48px 20px;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    /* Centers the content and caps its width so lines stay readable. */
+    .page {
+      max-width: var(--page-width);
+      margin: 0 auto;
+    }
+
+    /* ----------------------------------------------------------------------
+       3. HEADER
+       ---------------------------------------------------------------------- */
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2.25rem;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .intro {
+      margin: 0 0 32px;
+      max-width: 34em;
+      color: var(--ink-soft);
+    }
+
+    /* ----------------------------------------------------------------------
+       4. SHEET TILES
+       Each tile is one big link. Side by side on wide screens,
+       stacked on phones (see the media query at the bottom).
+       ---------------------------------------------------------------------- */
+    .sheets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .sheet {
+      position: relative;            /* Anchor for the "Current shift" tag. */
+      display: block;
+      padding: 28px 24px 24px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* The two tiles differ only in color: light for day, dark for night. */
+    .sheet--day {
+      background: var(--day);
+    }
+
+    .sheet--night {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    /* Feedback when the tile is hovered or reached with the Tab key. */
+    .sheet:hover {
+      transform: translateY(-2px);
+    }
+
+    .sheet:focus-visible {
+      outline: 4px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .sheet__name {
+      margin: 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .sheet__action {
+      margin: 20px 0 0;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    /* ----------------------------------------------------------------------
+       5. MINI TIMELINE
+       Three check times on a line, echoing the timeline on the printed sheet.
+       ---------------------------------------------------------------------- */
+    .times {
+      display: flex;
+      justify-content: space-between;
+      margin: 28px 0 0;
+      padding: 0;
+      border-top: 2px solid currentColor;
+      list-style: none;
+    }
+
+    .times li {
+      position: relative;
+      padding-top: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;  /* Keeps digits evenly spaced. */
+    }
+
+    /* The small tick mark above each time. */
+    .times li::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      height: 14px;
+      border-left: 2px solid currentColor;
+    }
+
+    /* First and last ticks sit at the very ends of the line. */
+    .times li:first-child::before { left: 0; }
+    .times li:last-child::before  { left: auto; right: 0; }
+
+    /* ----------------------------------------------------------------------
+       6. "CURRENT SHIFT" TAG
+       Hidden by default. The script at the bottom shows one of them.
+       ---------------------------------------------------------------------- */
+    .sheet__tag {
+      display: none;
+      position: absolute;
+      top: -13px;
+      right: 16px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--focus);
+      color: var(--ink);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .sheet.is-current .sheet__tag {
+      display: block;
+    }
+
+    /* ----------------------------------------------------------------------
+       7. PRINT TIP AND FOOTER
+       ---------------------------------------------------------------------- */
+    .tip {
+      margin: 32px 0 0;
+      padding: 16px 20px;
+      border-left: 4px solid var(--ink);
+      background: #f6f8fb;
+    }
+
+    .tip strong {
+      display: block;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+      color: var(--ink-soft);
+      font-size: 0.875rem;
+    }
+
+    footer p {
+      margin: 0 0 6px;
+    }
+
+    /* ----------------------------------------------------------------------
+       8. SMALL SCREENS AND REDUCED MOTION
+       ---------------------------------------------------------------------- */
+    @media (max-width: 600px) {
+      body   { padding: 32px 16px; }
+      h1     { font-size: 1.85rem; }
+      .sheets { grid-template-columns: 1fr; gap: 24px; }
+    }
+
+    /* Only animate the hover lift for people who have not asked for less motion. */
+    @media (prefers-reduced-motion: no-preference) {
+      .sheet { transition: transform 120ms ease; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+
+    <!-- HEADER ---------------------------------------------------------- -->
+    <header>
+      <h1>PCT shift sheets</h1>
+      <p class="intro">
+        A one-page worksheet for tracking vitals, glucose checks, baths and
+        linens across a shift. Pick your shift to open the sheet, then print it.
+      </p>
+    </header>
+
+    <!-- SHEET TILES -------------------------------------------------------
+         Each <a> is one tile. "data-shift" is read by the script below.
+         To add another sheet later, copy one tile and change its
+         href, data-shift, name and times.
+         ------------------------------------------------------------------ -->
+    <div class="sheets">
+
+      <a class="sheet sheet--day" href="day.pdf" data-shift="day">
+        <span class="sheet__tag">Current shift</span>
+        <h2 class="sheet__name">Day shift</h2>
+        <ul class="times" aria-label="Check times">
+          <li>0700</li>
+          <li>1100</li>
+          <li>1500</li>
+        </ul>
+        <p class="sheet__action">Open day sheet (PDF)</p>
+      </a>
+
+      <a class="sheet sheet--night" href="night.pdf" data-shift="night">
+        <span class="sheet__tag">Current shift</span>
+        <h2 class="sheet__name">Night shift</h2>
+        <ul class="times" aria-label="Check times">
+          <li>1900</li>
+          <li>2300</li>
+          <li>0300</li>
+        </ul>
+        <p class="sheet__action">Open night sheet (PDF)</p>
+      </a>
+
+    </div>
+
+    <!-- PRINT TIP -------------------------------------------------------- -->
+    <p class="tip">
+      <strong>Printing</strong>
+      Letter paper, landscape, scale set to 100% or "Actual size".
+      "Fit to page" shrinks the boxes.
+    </p>
+
+    <!-- FOOTER ----------------------------------------------------------- -->
+    <footer>
+      <p>These are blank templates. This page collects no information.</p>
+      <p>Filled-in sheets contain patient information. Shred them at the end of your shift.</p>
+    </footer>
+
+  </main>
+
+  <!--
+    ==========================================================================
+    3. SCRIPT
+    Shows the "Current shift" tag on whichever tile matches the time on the
+    viewer's own device. It reads the clock and nothing else: no network
+    requests, no storage, no tracking.
+
+    The page works fully without it. To remove it, delete this whole
+    <script> block
+    ==========================================================================
+  -->
+  <script>
+    (function tagCurrentShift() {
+      "use strict";
+
+      // Day shift runs 0700 to 1859. Everything else counts as night shift.
+      const DAY_START_HOUR = 7;
+      const NIGHT_START_HOUR = 19;
+
+      // Returns "day" or "night" for a given hour of the day (0 to 23).
+      function shiftForHour(hour) {
+        const isDay = hour >= DAY_START_HOUR && hour < NIGHT_START_HOUR;
+        return isDay ? "day" : "night";
+      }
+
+      // Find the tile whose data-shift matches, and mark it.
+      const currentShift = shiftForHour(new Date().getHours());
+      const currentTile = document.querySelector(`[data-shift="${currentShift}"]`);
+
+      if (currentTile) {
+        currentTile.classList.add("is-current");
+      }
+    })();
+  </script>
+</body>
+</html>
