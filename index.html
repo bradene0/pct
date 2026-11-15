@@ -311,7 +311,7 @@
     (function tagCurrentShift() {
       "use strict";
 
-      // Day shift runs 0700 to 1859. Everything else counts as night shift.
+      // Day shift runs 0645 to 1844. Night shift is 1845 to 0644. <CHANGED TO ACCOUNT FOR COMMON EARLY CLOCK-IN>
       const DAY_START_HOUR = 6.75;
       const NIGHT_START_HOUR = 18.75;
 
